@@ -1,5 +1,5 @@
-# Stage 1: Build the JAR with Maven (use maven:3.9.9-openjdk-17, latest stable)
-FROM maven:3.9.9-openjdk-17 AS build
+# Stage 1: Build the JAR with Maven (using maven:3.9.6-eclipse-temurin-17, latest stable)
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 # Copy pom.xml first to cache dependencies (faster builds)
 COPY pom.xml .
@@ -9,8 +9,8 @@ COPY src ./src
 # Build the JAR, skipping tests for speed
 RUN mvn clean package -DskipTests
 
-# Stage 2: Run the JAR with OpenJDK (use openjdk:17-jre-alpine, slim and lightweight)
-FROM openjdk:17-jre-alpine
+# Stage 2: Run the JAR with OpenJDK (using eclipse-temurin:17-jre-alpine, lightweight JRE)
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 # Copy the built JAR from the build stage
 COPY --from=build /app/target/*.jar app.jar
