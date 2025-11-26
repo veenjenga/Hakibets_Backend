@@ -43,12 +43,19 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> {
                     System.out.println("Permitting /api/auth/** and securing others at " + new Date());
-                    auth.requestMatchers("/api/auth/**").permitAll()
+                    auth
+                            .requestMatchers("/api/auth/**").permitAll()        // Public endpoints: register & login
+                            .requestMatchers("/h2-console/**").permitAll()      // Allow H2 console in browser
                             .anyRequest().authenticated();
                 })
                 //This lets the filter check the JWT token first, ensuring only valid token holders get through to protected areas.
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        return http.build();// finalizes the security chain and returns it to Spring to use. It’s like locking in all the rules.
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+
+                // THIS LINE IS THE ONLY FIX NEEDED FOR 403 on POST requests (register/login)
+                // Spring Boot 3.5 + Spring Security 6 blocks X-Frame-Options by default → 403 on all POSTs even with permitAll()
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()));
+
+        return http.build(); // finalizes the security chain and returns it to Spring to use. It’s like locking in all the rules.
     }
 
     @Bean
