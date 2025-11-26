@@ -1,16 +1,16 @@
-# Stage 1: Build the JAR with Maven
-FROM maven:3.8.6-openjdk-17 AS build
+# Stage 1: Build the JAR with Maven (use maven:3.9.9-openjdk-17, latest stable)
+FROM maven:3.9.9-openjdk-17 AS build
 WORKDIR /app
-# Copy pom.xml first to cache dependencies
+# Copy pom.xml first to cache dependencies (faster builds)
 COPY pom.xml .
-RUN mvn dependency:go-offline -B # Cache dependencies
+RUN mvn dependency:go-offline -B
 # Copy source code
 COPY src ./src
-# Build the JAR
-RUN mvn clean package -DskipTests # Skip tests for speed
+# Build the JAR, skipping tests for speed
+RUN mvn clean package -DskipTests
 
-# Stage 2: Run the JAR with OpenJDK
-FROM openjdk:17-jre-slim
+# Stage 2: Run the JAR with OpenJDK (use openjdk:17-jre-alpine, slim and lightweight)
+FROM openjdk:17-jre-alpine
 WORKDIR /app
 # Copy the built JAR from the build stage
 COPY --from=build /app/target/*.jar app.jar
